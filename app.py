@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Creator Hub — Simple content creator toolkit"""
 
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 import sqlite3
 import json
 import os
@@ -14,16 +15,42 @@ import httpx
 import subprocess
 import re
 import pysrt
+import hashlib
+import secrets
 from datetime import datetime
 
 app = FastAPI(title="Creator Hub")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "creator.db")
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 AI_API = "http://127.0.0.1:20128/v1"
 AI_KEY = os.environ.get("AI_API_KEY", "")
+
+# Auth config
+AUTH_PASSWORD = os.environ.get("CREATOR_HUB_PASSWORD", "creator2026")
+
+def verify_auth(request: Request):
+    """Check if user is authenticated"""
+    if request.session.get("authenticated"):
+        return True
+    raise HTTPException(status_code=401, detail="Not authenticated")
+
+@app.post("/api/login")
+async def login(request: Request):
+    body = await request.json()
+    password = body.get("password", "")
+    if password == AUTH_PASSWORD:
+        request.session["authenticated"] = True
+        return {"status": "ok"}
+    return {"status": "error", "message": "Wrong password"}
+
+@app.post("/api/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return {"status": "ok"}
 
 # Mount static
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
@@ -95,7 +122,10 @@ async def ai_chat(system_prompt: str, user_prompt: str, model: str = "anthropic/
 # ============ PAGES ============
 
 @app.get("/", response_class=HTMLResponse)
-async def index():
+async def index(request: Request):
+    if not request.session.get("authenticated"):
+        with open(os.path.join(BASE_DIR, "templates", "login.html")) as f:
+            return f.read()
     with open(os.path.join(BASE_DIR, "templates", "index.html")) as f:
         return f.read()
 
@@ -584,6 +614,7 @@ async def api_generate_faceless(request: Request):
     script = body.get("script", "")
     voice = body.get("voice", "id-ID-ArdiNeural")
     bg_color = body.get("bg_color", "#1a1a2e")
+    bg_style = body.get("bg_style", "solid")  # solid, gradient
     
     if not script:
         return {"status": "error", "message": "Script is required"}
@@ -605,7 +636,8 @@ async def api_generate_faceless(request: Request):
         create_subtitle_srt(script, duration, srt_path)
         
         # Create video
-        result = create_faceless_video(audio_path, srt_path, output_path, bg_color=bg_color)
+        result = create_faceless_video(audio_path, srt_path, output_path, 
+                                       bg_color=bg_color, bg_style=bg_style)
         
         if result:
             return {
@@ -721,6 +753,144 @@ async def api_export_csv(request: Request):
         f.write(output.getvalue())
     
     return FileResponse(csv_path, filename="content_calendar.csv", media_type="text/csv")
+
+# ============ AUTO-PIPELINE ============
+
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+@app.post("/api/pipeline/run")
+async def run_pipeline(
+    video: UploadFile = File(...),
+    subtitle: UploadFile = File(None),
+    add_subtitle: bool = Form(True),
+    reframe_shorts: bool = Form(True),
+    auto_clip: bool = Form(False),
+    clip_duration: int = Form(30),
+    num_clips: int = Form(3),
+    post_telegram: bool = Form(False),
+    caption: str = Form("")
+):
+    """Full auto-pipeline: upload → process → post"""
+    from features import generate_subtitle, reframe_to_shorts
+    
+    pipe_id = str(uuid.uuid4())[:8]
+    pipe_dir = os.path.join(OUTPUT_DIR, "pipeline", pipe_id)
+    os.makedirs(pipe_dir, exist_ok=True)
+    
+    # Save source video
+    video_path = os.path.join(pipe_dir, f"source_{video.filename}")
+    with open(video_path, "wb") as f:
+        content = await video.read()
+        f.write(content)
+    
+    results = {"pipeline_id": pipe_id, "steps": []}
+    final_video = video_path
+    srt_path = None
+    
+    # Step 1: Generate subtitle
+    if add_subtitle:
+        try:
+            if subtitle:
+                srt_path = os.path.join(pipe_dir, subtitle.filename)
+                with open(srt_path, "wb") as f:
+                    f.write(await subtitle.read())
+            else:
+                srt_path = generate_subtitle(video_path, language="id")
+            
+            if srt_path and os.path.exists(srt_path):
+                # Burn subtitle into video
+                burned_path = os.path.join(pipe_dir, "subtitled.mp4")
+                sub_filter = (
+                    f"subtitles={srt_path}:force_style='"
+                    f"FontName=Arial,FontSize=20,PrimaryColour=&H00FFFFFF,"
+                    f"OutlineColour=&H00000000,Outline=2,Alignment=2,MarginV=40'"
+                )
+                cmd = [
+                    "ffmpeg", "-y", "-i", video_path,
+                    "-vf", sub_filter,
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                    "-c:a", "aac", burned_path
+                ]
+                subprocess.run(cmd, capture_output=True, timeout=300)
+                if os.path.exists(burned_path):
+                    final_video = burned_path
+                    results["steps"].append({"step": "subtitle", "status": "ok"})
+                else:
+                    results["steps"].append({"step": "subtitle", "status": "burn_failed"})
+            else:
+                results["steps"].append({"step": "subtitle", "status": "whisper_failed"})
+        except Exception as e:
+            results["steps"].append({"step": "subtitle", "status": "error", "error": str(e)})
+    
+    # Step 2: Reframe to 9:16
+    if reframe_shorts:
+        try:
+            shorts_path = os.path.join(pipe_dir, "shorts_9x16.mp4")
+            result = reframe_to_shorts(final_video, shorts_path, position="center")
+            if result:
+                final_video = shorts_path
+                results["steps"].append({"step": "reframe", "status": "ok"})
+            else:
+                results["steps"].append({"step": "reframe", "status": "failed"})
+        except Exception as e:
+            results["steps"].append({"step": "reframe", "status": "error", "error": str(e)})
+    
+    # Step 3: Auto-clip
+    clip_files = []
+    if auto_clip and srt_path and os.path.exists(srt_path):
+        try:
+            segments = analyze_srt_engagement(srt_path)
+            clips = find_clip_windows(segments, clip_duration=clip_duration, top_n=num_clips)
+            
+            for i, clip in enumerate(clips):
+                clip_path = os.path.join(pipe_dir, f"clip_{i+1}.mp4")
+                cut_clip(final_video, clip["start"], clip["end"], clip_path)
+                if os.path.exists(clip_path):
+                    clip_files.append(clip_path)
+            
+            results["steps"].append({"step": "auto_clip", "status": "ok", "clips": len(clip_files)})
+        except Exception as e:
+            results["steps"].append({"step": "auto_clip", "status": "error", "error": str(e)})
+    
+    # Step 4: Post to Telegram
+    if post_telegram and TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+        try:
+            # Post main video
+            tg_result = await post_to_telegram(final_video, caption or video.filename)
+            results["steps"].append({"step": "telegram_post", "status": "ok" if tg_result else "failed"})
+            
+            # Post clips too
+            for i, clip_path in enumerate(clip_files):
+                await post_to_telegram(clip_path, f"Clip {i+1}")
+        except Exception as e:
+            results["steps"].append({"step": "telegram_post", "status": "error", "error": str(e)})
+    elif post_telegram:
+        results["steps"].append({"step": "telegram_post", "status": "no_bot_configured"})
+    
+    # Collect output files
+    outputs = []
+    if os.path.exists(final_video) and final_video != video_path:
+        outputs.append({"type": "main", "file": f"/outputs/pipeline/{pipe_id}/{os.path.basename(final_video)}"})
+    for i, clip_path in enumerate(clip_files):
+        outputs.append({"type": f"clip_{i+1}", "file": f"/outputs/pipeline/{pipe_id}/{os.path.basename(clip_path)}"})
+    
+    results["outputs"] = outputs
+    results["status"] = "ok"
+    return results
+
+async def post_to_telegram(video_path: str, caption: str = ""):
+    """Post video to Telegram channel/chat"""
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendVideo"
+    
+    async with httpx.AsyncClient(timeout=120) as client:
+        with open(video_path, "rb") as f:
+            resp = await client.post(url, data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "caption": caption[:1024]
+            }, files={"video": (os.path.basename(video_path), f, "video/mp4")})
+        
+        return resp.status_code == 200
 
 if __name__ == "__main__":
     import uvicorn

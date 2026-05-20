@@ -27,6 +27,7 @@
             <li><a href="#" data-page="bulk">⚡ Bulk</a></li>
             <li><a href="#" data-page="templates">📋 Templates</a></li>
             <li><a href="#" data-page="schedule">📅 Schedule</a></li>
+            <li><a href="#" data-page="pipeline">🚀 Pipeline</a></li>
             <li><a href="#" data-page="history">📚 History</a></li>
         </ul>
     </nav>
@@ -328,13 +329,22 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Background Style</label>
+                        <select id="faceless-style">
+                            <option value="solid">Solid Color</option>
+                            <option value="gradient" selected>Gradient</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Background</label>
                         <select id="faceless-bg">
-                            <option value="#1a1a2e" selected>Dark Blue</option>
-                            <option value="#0f0f0f">Black</option>
-                            <option value="#1e3a5f">Navy</option>
-                            <option value="#2d1b69">Purple</option>
-                            <option value="#1a3a1a">Dark Green</option>
+                            <option value="gradient_blue" selected>Gradient Blue</option>
+                            <option value="gradient_purple">Gradient Purple</option>
+                            <option value="gradient_dark">Gradient Dark</option>
+                            <option value="#1a1a2e">Solid Dark Blue</option>
+                            <option value="#0f0f0f">Solid Black</option>
+                            <option value="#2d1b69">Solid Purple</option>
+                            <option value="#1a3a1a">Solid Dark Green</option>
                         </select>
                     </div>
                 </div>
@@ -432,6 +442,64 @@
                 <button class="btn-primary" style="margin-top:8px;background:#2d3436" onclick="exportCSV()">Export CSV ⬇️</button>
             </div>
             <div id="schedule-list" class="result-card"></div>
+        </section>
+
+        <!-- PIPELINE PAGE -->
+        <section id="page-pipeline" class="page">
+            <h1>Auto-Pipeline 🚀</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Upload video → auto-edit (subtitle + reframe + clip) → preview → post ke Telegram</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Video File</label>
+                    <input type="file" id="pipe-video" accept="video/*" style="padding:8px">
+                </div>
+                <div class="form-group">
+                    <label>Subtitle (SRT) — kosongkan untuk auto-generate</label>
+                    <input type="file" id="pipe-subtitle" accept=".srt" style="padding:8px">
+                </div>
+                <div class="form-group">
+                    <label>Caption (untuk Telegram post)</label>
+                    <input type="text" id="pipe-caption" placeholder="Caption yang muncul di Telegram...">
+                </div>
+                
+                <h4 style="margin:16px 0 12px;color:var(--accent)">Processing Options</h4>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+                        <input type="checkbox" id="pipe-subtitle-check" checked> 🗣️ Auto-Subtitle (Whisper → burn ke video)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+                        <input type="checkbox" id="pipe-reframe-check" checked> 📱 Reframe ke 9:16 (Shorts/Reels)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+                        <input type="checkbox" id="pipe-clip-check"> ✂️ Auto-Clip (potong bagian terbaik)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+                        <input type="checkbox" id="pipe-telegram-check"> 📤 Post ke Telegram
+                    </label>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Clip Duration</label>
+                        <select id="pipe-clip-duration">
+                            <option value="15">15s</option>
+                            <option value="30" selected>30s</option>
+                            <option value="60">60s</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Num Clips</label>
+                        <select id="pipe-num-clips">
+                            <option value="3" selected>3</option>
+                            <option value="5">5</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" onclick="runPipeline()">Run Pipeline 🚀</button>
+            </div>
+            <div id="pipe-result" class="result-card hidden"></div>
         </section>
 
         <!-- HISTORY PAGE -->

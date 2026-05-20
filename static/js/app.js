@@ -353,7 +353,8 @@ async function generateFaceless() {
     const data = {
         script: script,
         voice: document.getElementById('faceless-voice').value,
-        bg_color: document.getElementById('faceless-bg').value
+        bg_color: document.getElementById('faceless-bg').value,
+        bg_style: document.getElementById('faceless-style').value
     };
     
     try {
@@ -376,6 +377,77 @@ async function generateFaceless() {
         setLoading(btn, false);
         showResult('faceless-result', 'Error: ' + e.message, '❌ Error');
     }
+}
+
+// ============ PIPELINE ============
+async function runPipeline() {
+    const btn = event.target;
+    const videoFile = document.getElementById('pipe-video').files[0];
+    if (!videoFile) return alert('Upload video dulu');
+    
+    setLoading(btn, true);
+    
+    const formData = new FormData();
+    formData.append('video', videoFile);
+    
+    const subtitleFile = document.getElementById('pipe-subtitle').files[0];
+    if (subtitleFile) formData.append('subtitle', subtitleFile);
+    
+    formData.append('add_subtitle', document.getElementById('pipe-subtitle-check').checked);
+    formData.append('reframe_shorts', document.getElementById('pipe-reframe-check').checked);
+    formData.append('auto_clip', document.getElementById('pipe-clip-check').checked);
+    formData.append('clip_duration', document.getElementById('pipe-clip-duration').value);
+    formData.append('num_clips', document.getElementById('pipe-num-clips').value);
+    formData.append('post_telegram', document.getElementById('pipe-telegram-check').checked);
+    formData.append('caption', document.getElementById('pipe-caption').value);
+    
+    try {
+        const resp = await fetch('/api/pipeline/run', { method: 'POST', body: formData });
+        const data = await resp.json();
+        setLoading(btn, false);
+        
+        if (data.status === 'ok') {
+            renderPipelineResult(data);
+        } else {
+            showResult('pipe-result', data.message || 'Pipeline failed', '❌ Error');
+        }
+    } catch (e) {
+        setLoading(btn, false);
+        showResult('pipe-result', 'Error: ' + e.message, '❌ Error');
+    }
+}
+
+function renderPipelineResult(data) {
+    const el = document.getElementById('pipe-result');
+    el.classList.remove('hidden');
+    
+    let html = '<h3 style="color:var(--success)">🚀 Pipeline Complete!</h3>';
+    
+    // Steps status
+    html += '<div style="margin:16px 0">';
+    data.steps.forEach(step => {
+        const icon = step.status === 'ok' ? '✅' : step.status.includes('error') ? '❌' : '⚠️';
+        html += `<div style="padding:6px 0;font-size:13px">${icon} ${step.step} — ${step.status}</div>`;
+    });
+    html += '</div>';
+    
+    // Output files with preview
+    if (data.outputs && data.outputs.length > 0) {
+        html += '<h4 style="margin:16px 0 8px">📁 Output Files</h4>';
+        data.outputs.forEach(out => {
+            html += `<div class="schedule-item">
+                <div class="info">
+                    <h4>${out.type}</h4>
+                    <video controls style="width:100%;max-width:300px;margin:8px 0;border-radius:6px">
+                        <source src="${out.file}" type="video/mp4">
+                    </video>
+                </div>
+                <a href="${out.file}" download style="color:var(--accent);text-decoration:none;font-size:13px">⬇️ Download</a>
+            </div>`;
+        });
+    }
+    
+    el.innerHTML = html;
 }
 
 // ============ BULK GENERATOR ============

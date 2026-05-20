@@ -159,22 +159,46 @@ def get_audio_duration(audio_path: str) -> float:
     return float(data.get("format", {}).get("duration", 0))
 
 def create_faceless_video(audio_path: str, srt_path: str, output_path: str, 
-                          bg_color: str = "#1a1a2e", text_color: str = "white"):
-    """Create video with background color + subtitle overlay from audio"""
+                          bg_color: str = "#1a1a2e", text_color: str = "white",
+                          bg_style: str = "solid", images: list = None):
+    """Create video with background + subtitle overlay from audio"""
     duration = get_audio_duration(audio_path)
     
-    # Create video with solid background + subtitles
+    # Background options
+    if bg_style == "gradient" or bg_color.startswith("gradient"):
+        # Gradient background (dark blue to purple)
+        gradients = {
+            "gradient_blue": "color=c=#0f0c29:s=1080x1920:d={d}[bg1];color=c=#302b63:s=1080x1920:d={d}[bg2];[bg1][bg2]blend=all_mode=overlay:all_opacity=0.5",
+            "gradient_purple": "color=c=#1a0533:s=1080x1920:d={d}[bg1];color=c=#4a0e8f:s=1080x1920:d={d}[bg2];[bg1][bg2]blend=all_mode=overlay:all_opacity=0.5",
+            "gradient_dark": "color=c=#0f0f0f:s=1080x1920:d={d}[bg1];color=c=#1a1a2e:s=1080x1920:d={d}[bg2];[bg1][bg2]blend=all_mode=overlay:all_opacity=0.5",
+        }
+        bg_filter = gradients.get(bg_color, gradients["gradient_blue"]).format(d=duration)
+        input_args = ["-f", "lavfi", "-i", bg_filter]
+    elif bg_style == "slideshow" and images:
+        # Image slideshow background
+        img_duration = duration / len(images) if images else duration
+        concat_file = os.path.join(os.path.dirname(output_path), "concat.txt")
+        with open(concat_file, 'w') as f:
+            for img in images:
+                f.write(f"file '{img}'\nduration {img_duration}\n")
+            f.write(f"file '{images[-1]}'\n")  # last frame hold
+        input_args = ["-f", "concat", "-safe", "0", "-i", concat_file]
+    else:
+        # Solid color
+        input_args = ["-f", "lavfi", "-i", f"color=c={bg_color}:s=1080x1920:d={duration}"]
+    
+    # Subtitle filter
     subtitle_filter = (
         f"subtitles={srt_path}:force_style='"
-        f"FontName=Arial,FontSize=22,PrimaryColour=&H00FFFFFF,"
-        f"OutlineColour=&H00000000,Outline=2,Alignment=2,MarginV=60'"
+        f"FontName=Arial,FontSize=24,PrimaryColour=&H00FFFFFF,"
+        f"OutlineColour=&H00000000,Outline=2,Bold=1,Alignment=2,MarginV=80'"
     )
     
     cmd = [
         "ffmpeg", "-y",
-        "-f", "lavfi", "-i", f"color=c={bg_color}:s=1080x1920:d={duration}",
+        *input_args,
         "-i", audio_path,
-        "-vf", subtitle_filter,
+        "-vf", f"scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,{subtitle_filter}",
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
         "-shortest", output_path
@@ -191,16 +215,14 @@ async def scrape_youtube_trending(region: str = "ID"):
     import httpx
     
     url = f"https://www.youtube.com/feed/trending"
-    # Use YouTube RSS as fallback
     rss_url = f"https://www.youtube.com/feeds/videos.xml?chart=most_popular&regionCode={region}"
     
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(rss_url)
             if resp.status_code == 200:
-                # Parse XML for titles
                 titles = re.findall(r'<title>(.*?)</title>', resp.text)
-                return titles[1:21]  # Skip channel title, get top 20
+                return titles[1:21]
     except:
         pass
     
@@ -208,7 +230,6 @@ async def scrape_youtube_trending(region: str = "ID"):
 
 async def scrape_twitter_trending():
     """Get trending topics (placeholder - needs API)"""
-    # Would need Twitter API or scraping
     return []
 
 

@@ -5,3 +5,4 @@ pysrt>=1.1.2
 edge-tts>=7.0.0
 openai-whisper>=20230918
 python-multipart>=0.0.6
+itsdangerous>=2.0.0
