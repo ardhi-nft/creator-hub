@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Hub</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <h2>🎬 Creator Hub</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active" data-page="script">📝 Script</a></li>
+            <li><a href="#" data-page="caption">💬 Caption</a></li>
+            <li><a href="#" data-page="hooks">🎣 Hooks</a></li>
+            <li><a href="#" data-page="thumbnail">🖼️ Thumbnail</a></li>
+            <li><a href="#" data-page="ideas">💡 Ideas</a></li>
+            <li><a href="#" data-page="seo">🔍 SEO</a></li>
+            <li><a href="#" data-page="abtitle">🎯 A/B Title</a></li>
+            <li><a href="#" data-page="trends">📈 Trends</a></li>
+            <li><a href="#" data-page="clip">✂️ Auto-Clip</a></li>
+            <li><a href="#" data-page="subtitle">🗣️ Subtitle</a></li>
+            <li><a href="#" data-page="shorts">📱 Shorts</a></li>
+            <li><a href="#" data-page="faceless">🎭 Faceless</a></li>
+            <li><a href="#" data-page="bulk">⚡ Bulk</a></li>
+            <li><a href="#" data-page="templates">📋 Templates</a></li>
+            <li><a href="#" data-page="schedule">📅 Schedule</a></li>
+            <li><a href="#" data-page="history">📚 History</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <!-- SCRIPT PAGE -->
+        <section id="page-script" class="page active">
+            <h1>Script Generator</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Topic / Ide Video</label>
+                    <input type="text" id="script-topic" placeholder="Contoh: 5 cara menghasilkan uang dari AI">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="script-platform">
+                            <option value="youtube">YouTube</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram Reels</option>
+                            <option value="podcast">Podcast</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Style</label>
+                        <select id="script-style">
+                            <option value="informative">Informative</option>
+                            <option value="entertaining">Entertaining</option>
+                            <option value="educational">Educational</option>
+                            <option value="storytelling">Storytelling</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi (detik)</label>
+                        <select id="script-duration">
+                            <option value="30">30s (Short)</option>
+                            <option value="60" selected>60s (Reels)</option>
+                            <option value="180">3 min</option>
+                            <option value="600">10 min</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateScript()">Generate Script ✨</button>
+            </div>
+            <div id="script-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- CAPTION PAGE -->
+        <section id="page-caption" class="page">
+            <h1>Caption & Hashtag</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Tentang apa?</label>
+                    <input type="text" id="caption-topic" placeholder="Contoh: Review iPhone terbaru">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="caption-platform">
+                            <option value="instagram">Instagram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="linkedin">LinkedIn</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tone</label>
+                        <select id="caption-tone">
+                            <option value="casual">Casual</option>
+                            <option value="professional">Professional</option>
+                            <option value="funny">Funny</option>
+                            <option value="inspirational">Inspirational</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateCaption()">Generate Caption ✨</button>
+            </div>
+            <div id="caption-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- HOOKS PAGE -->
+        <section id="page-hooks" class="page">
+            <h1>Hook Ideas</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Topic</label>
+                    <input type="text" id="hooks-topic" placeholder="Contoh: Produktivitas, Side hustle, AI tools">
+                </div>
+                <div class="form-group">
+                    <label>Jumlah hooks</label>
+                    <select id="hooks-count">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="generateHooks()">Generate Hooks 🎣</button>
+            </div>
+            <div id="hooks-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- THUMBNAIL PAGE -->
+        <section id="page-thumbnail" class="page">
+            <h1>Thumbnail Ideas</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Judul / Topic Video</label>
+                    <input type="text" id="thumb-topic" placeholder="Contoh: Cara dapat 10 juta pertama dari YouTube">
+                </div>
+                <button class="btn-primary" onclick="generateThumbnail()">Generate Ideas 🖼️</button>
+            </div>
+            <div id="thumb-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- IDEAS PAGE -->
+        <section id="page-ideas" class="page">
+            <h1>Content Ideas</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Niche / Topik</label>
+                    <input type="text" id="ideas-niche" placeholder="Contoh: Tech, Finance, Lifestyle, Gaming">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="ideas-platform">
+                            <option value="youtube">YouTube</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah ide</label>
+                        <select id="ideas-count">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateIdeas()">Generate Ideas 💡</button>
+            </div>
+            <div id="ideas-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- SEO PAGE -->
+        <section id="page-seo" class="page">
+            <h1>SEO Optimizer</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Topic / Judul Video</label>
+                    <input type="text" id="seo-topic" placeholder="Contoh: Tutorial editing video pakai CapCut">
+                </div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="seo-platform">
+                        <option value="youtube">YouTube</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="blog">Blog/Website</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="generateSEO()">Optimize SEO 🔍</button>
+            </div>
+            <div id="seo-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- A/B TITLE PAGE -->
+        <section id="page-abtitle" class="page">
+            <h1>A/B Title Tester</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Topic Video</label>
+                    <input type="text" id="ab-topic" placeholder="Contoh: Tutorial bikin passive income dari AI">
+                </div>
+                <div class="form-group">
+                    <label>Jumlah variasi</label>
+                    <select id="ab-count">
+                        <option value="5" selected>5</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="generateABTitle()">Generate Titles 🎯</button>
+            </div>
+            <div id="ab-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- TRENDS PAGE -->
+        <section id="page-trends" class="page">
+            <h1>Trend Tracker 📈</h1>
+            <div class="form-card">
+                <p style="color:var(--text-muted);margin-bottom:16px">Lihat apa yang lagi trending di YouTube Indonesia</p>
+                <button class="btn-primary" onclick="loadTrends()">Load Trending Topics 🔥</button>
+            </div>
+            <div id="trends-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- AUTO-CLIP PAGE -->
+        <section id="page-clip" class="page">
+            <h1>Auto-Clip ✂️</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Upload video + subtitle (SRT) → detect bagian paling engaging → auto-cut jadi clips pendek</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Video File</label>
+                    <input type="file" id="clip-video" accept="video/*" style="padding:8px">
+                </div>
+                <div class="form-group">
+                    <label>Subtitle (SRT) — optional, auto-generate kalau kosong</label>
+                    <input type="file" id="clip-subtitle" accept=".srt" style="padding:8px">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Durasi per clip (detik)</label>
+                        <select id="clip-duration">
+                            <option value="15">15s (Short)</option>
+                            <option value="30" selected>30s</option>
+                            <option value="45">45s</option>
+                            <option value="60">60s (Reels)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah clips</label>
+                        <select id="clip-count">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="analyzeClips()">Analyze & Find Best Clips ✂️</button>
+            </div>
+            <div id="clip-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- SUBTITLE PAGE -->
+        <section id="page-subtitle" class="page">
+            <h1>Auto-Subtitle 🗣️</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Upload video → auto-generate subtitle (SRT) pakai Whisper AI</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Video File</label>
+                    <input type="file" id="sub-video" accept="video/*,audio/*" style="padding:8px">
+                </div>
+                <div class="form-group">
+                    <label>Bahasa</label>
+                    <select id="sub-language">
+                        <option value="id" selected>Indonesia</option>
+                        <option value="en">English</option>
+                        <option value="ms">Malay</option>
+                        <option value="jw">Javanese</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="generateSubtitle()">Generate Subtitle 🗣️</button>
+            </div>
+            <div id="sub-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- SHORTS PAGE -->
+        <section id="page-shorts" class="page">
+            <h1>Video to Shorts 📱</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Convert landscape video → 9:16 vertical (Shorts/Reels/TikTok)</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Video File (landscape)</label>
+                    <input type="file" id="shorts-video" accept="video/*" style="padding:8px">
+                </div>
+                <div class="form-group">
+                    <label>Crop Position</label>
+                    <select id="shorts-position">
+                        <option value="center" selected>Center</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="convertShorts()">Convert to 9:16 📱</button>
+            </div>
+            <div id="shorts-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- FACELESS VIDEO PAGE -->
+        <section id="page-faceless" class="page">
+            <h1>Faceless Video 🎭</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Input script → TTS voice + subtitle overlay → video jadi tanpa face</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Script / Narasi</label>
+                    <textarea id="faceless-script" rows="6" placeholder="Tulis script narasi di sini... Video akan di-generate dengan voice AI + subtitle overlay"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Voice</label>
+                        <select id="faceless-voice">
+                            <option value="id-ID-ArdiNeural" selected>Ardi (ID Male)</option>
+                            <option value="id-ID-GadisNeural">Gadis (ID Female)</option>
+                            <option value="en-US-GuyNeural">Guy (EN Male)</option>
+                            <option value="en-US-JennyNeural">Jenny (EN Female)</option>
+                            <option value="en-US-AriaNeural">Aria (EN Female)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Background</label>
+                        <select id="faceless-bg">
+                            <option value="#1a1a2e" selected>Dark Blue</option>
+                            <option value="#0f0f0f">Black</option>
+                            <option value="#1e3a5f">Navy</option>
+                            <option value="#2d1b69">Purple</option>
+                            <option value="#1a3a1a">Dark Green</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateFaceless()">Generate Video 🎭</button>
+            </div>
+            <div id="faceless-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- BULK GENERATOR PAGE -->
+        <section id="page-bulk" class="page">
+            <h1>Bulk Generator ⚡</h1>
+            <p style="color:var(--text-muted);margin-bottom:20px">Batch generate caption/script/hooks untuk banyak topik sekaligus</p>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Topics (satu per baris)</label>
+                    <textarea id="bulk-topics" rows="6" placeholder="Tutorial AI untuk pemula&#10;Cara edit video di HP&#10;5 side hustle 2026&#10;Review gadget murah"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="bulk-type">
+                            <option value="caption">Caption</option>
+                            <option value="script">Script</option>
+                            <option value="hooks">Hooks</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="bulk-platform">
+                            <option value="instagram">Instagram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="bulkGenerate()">Generate All ⚡</button>
+            </div>
+            <div id="bulk-result" class="result-card hidden"></div>
+        </section>
+
+        <!-- TEMPLATES PAGE -->
+        <section id="page-templates" class="page">
+            <h1>Template Library 📋</h1>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Template Name</label>
+                    <input type="text" id="tpl-name" placeholder="Contoh: Caption Review Produk">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="tpl-category">
+                        <option value="caption">Caption</option>
+                        <option value="script">Script</option>
+                        <option value="hooks">Hooks</option>
+                        <option value="seo">SEO</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Template Content (pakai {variable} untuk placeholder)</label>
+                    <textarea id="tpl-content" rows="5" placeholder="🔥 {product_name} Review Jujur!&#10;&#10;Gue udah pake {product_name} selama {duration}...&#10;&#10;#review #{product_name} #honest"></textarea>
+                </div>
+                <button class="btn-primary" onclick="saveTemplate()">Save Template 📋</button>
+            </div>
+            <div id="templates-list" class="result-card" style="margin-top:16px"></div>
+        </section>
+
+        <!-- SCHEDULE PAGE -->
+        <section id="page-schedule" class="page">
+            <h1>Content Calendar</h1>
+            <div class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Judul</label>
+                        <input type="text" id="sched-title" placeholder="Judul konten">
+                    </div>
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="sched-platform">
+                            <option value="youtube">YouTube</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter/X</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes / Caption</label>
+                    <textarea id="sched-content" rows="3" placeholder="Catatan atau caption..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Jadwal Publish</label>
+                    <input type="datetime-local" id="sched-date">
+                </div>
+                <button class="btn-primary" onclick="createSchedule()">Add to Calendar 📅</button>
+                <button class="btn-primary" style="margin-top:8px;background:#2d3436" onclick="exportCSV()">Export CSV ⬇️</button>
+            </div>
+            <div id="schedule-list" class="result-card"></div>
+        </section>
+
+        <!-- HISTORY PAGE -->
+        <section id="page-history" class="page">
+            <h1>History</h1>
+            <div class="tabs">
+                <button class="tab active" onclick="loadHistory('scripts')">Scripts</button>
+                <button class="tab" onclick="loadHistory('captions')">Captions</button>
+            </div>
+            <div id="history-list" class="result-card"></div>
+        </section>
+    </main>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
